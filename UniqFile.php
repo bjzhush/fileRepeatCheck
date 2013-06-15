@@ -75,17 +75,20 @@ class UniqFile
     //input a path ,set all file into $this->fileList
     public function scanDirectory($path) {
         $path = rtrim($path, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
-        $tmpFileList = scandir($path);
-        $newTmpFileList = array_flip($tmpFileList);
-        unset($newTmpFileList['.']);
-        unset($newTmpFileList['..']);
-        foreach ($newTmpFileList as $kb => $vb) {
-            array_push($this->fileList, $path.$kb);
-        }
-        foreach ($tmpFileList as $k => $v) {
-            if ($v != '.' && $v != '..' && is_dir($path.$v)) {
-                $this->scanDirectory($path.$v);
-                array_push($this->dirList, $path.$v);
+        $tmpFileList = @scandir($path);
+        if (is_array($tmpFileList)) {
+            $newTmpFileList = array_flip($tmpFileList);
+            unset($newTmpFileList['.']);
+            unset($newTmpFileList['..']);
+            foreach ($newTmpFileList as $kb => $vb) {
+                array_push($this->fileList, $path.$kb);
+            }
+            foreach ($tmpFileList as $k => $v) {
+                if ($v != '.' && $v != '..' && is_dir($path.$v)) {
+                    $this->scanDirectory($path.$v);
+                    array_push($this->dirList, $path.$v);
+                }
+            
             }
         
         }
