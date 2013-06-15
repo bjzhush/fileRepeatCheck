@@ -2,7 +2,7 @@
 /**
  * UniqFile 
  * Check repeat files under a specified directory
- * usage: php UniqFile.php -dir=/your/path [-hash=false]
+ * usage: php UniqFile.php -dir=/your/path [-hash=false] [-showdel=true]
  * use file section to hash file to improve efficiency 
  * @ToDo: add file delete ?
  * @version v0.1
@@ -23,7 +23,8 @@ class UniqFile
 
     protected $supportParameters = array(
             '-dir'     => TRUE,
-            '-hash'     => TRUE,
+            '-hash'    => TRUE,
+            '-showdel' =>FALSE,
             );
 
     public function __construct($argv) {
@@ -39,7 +40,7 @@ class UniqFile
 
         //check if  No parameter was  passed
         if (count($argv) == 1) {
-            exit('usage: php UniqFile.php -dir=/your/path [-hash=false]');
+            exit('usage: php UniqFile.php -dir=/your/path [-hash=false][-showdel=true]');
         }
 
         //init parameter
@@ -61,6 +62,11 @@ class UniqFile
                         exit('hash  value should be true/false');
                     }
                     $this->supportParameters['-hash'] = (strtoupper($arrtmp['1']) === 'TRUE');
+                } elseif ($arrtmp['0'] == '-showdel') {
+                    if (!in_array(strtoupper($arrtmp['1']), array('TRUE','FALSE'))) {
+                        exit('showdel  value should be true/false');
+                    }
+                    $this->supportParameters['-showdel'] = (strtoupper($arrtmp['1']) === 'TRUE');
                 }
             } else {
                 //ignore other parms passed
@@ -183,6 +189,23 @@ class UniqFile
         $this->timeCost = (float)($this->endtime-$this->starttime);
 
         //show result 
+
+
+        //show all repeat files exclude first one in the group 
+        if ($this->supportParameters['-showdel']) {
+            foreach ($this->sizeList as $k => $v) {
+                foreach ($v as $kb => $vb) {
+                    if ($kb != 0) {
+                        echo str_replace(' ','\\ ',$vb['filename']);
+                        echo "\n";
+                    }
+                }
+            }
+            exit;
+        
+        }
+
+
         foreach ($this->sizeList as $k => $v) {
             echo "^^^^^^^^^^^^^^^^^^^^^\n";
 
