@@ -12,7 +12,8 @@ UniqFile.php 共3个参数，
  
   建议使用sudo权限执行，避免无权限访问的情况（虽然对于权限拒绝也做了判断和记录）
 
-usage: /usr/bin/php UniqFile.php -dir=/your/path/ [-hash=false] [-showdel=true]
+  usage: php UniqFile.php -dir=/your/path [-hash=false] [-showdel=true] [-ext=null/txt/php]
+  可以指定只在某些扩展名的文件内进行比较，多个扩展名以/分隔开
 
 2.去重程序
  可用
