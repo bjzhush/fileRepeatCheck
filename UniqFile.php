@@ -6,6 +6,7 @@
  * ext = null stands for match files with no ext(file ext is seprated by .)
  * use file section to hash file to improve efficiency 
  * @ToDo: add file delete ?
+ * @ToDo: 增加进度显示及开关，设置timeout ？增加显示读取文件时间及排序时间的显示?  增加只对比指定扩展名的重复文件，比如php文件？
  * @version v0.1
  * @author Shuai Zhu <bjzhush@gmail.com> 
  */
