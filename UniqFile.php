@@ -2,7 +2,8 @@
 /**
  * UniqFile 
  * Check repeat files under a specified directory
- * usage: php UniqFile.php -dir=/your/path [-hash=false] [-showdel=true]
+ * usage: php UniqFile.php -dir=/your/path [-hash=false] [-showdel=true] [-ext=null/txt/php]
+ * ext = null stands for match files with no ext(file ext is seprated by .)
  * use file section to hash file to improve efficiency 
  * @ToDo: add file delete ?
  * @version v0.1
@@ -11,20 +12,22 @@
 class UniqFile
 {
     protected $fileList        = array();
-    protected $dirList         = array();
     protected $dirToCheck      = FALSE;
     protected $emptyFileCount  = 0;
     protected $allFileCount    = 0;
+    protected $extFileCount    = 0;
     protected $repeatFileCount = 0;
     protected $deniedFileCount = 0;
     protected $sizeList        = array();
     protected $hashList        = array();
     protected $timeCost        = 0;
+    protected $extList         = array();
 
     protected $supportParameters = array(
             '-dir'     => TRUE,
             '-hash'    => TRUE,
             '-showdel' =>FALSE,
+            '-ext'     =>FALSE,
             );
 
     public function __construct($argv) {
@@ -67,15 +70,22 @@ class UniqFile
                         exit('showdel  value should be true/false');
                     }
                     $this->supportParameters['-showdel'] = (strtoupper($arrtmp['1']) === 'TRUE');
+                } elseif ($arrtmp['0']== '-ext') {
+                    if (strpos($arrtmp['1'], '/') == FALSE) {
+                        $this->extList[] = str_replace('/[^a-zA-Z\s]/', '', $arrtmp['1']);
+                    } else {
+                        $tmparr = explode('/', $arrtmp['1']);
+                        foreach ($tmparr as $kb => $vb) {
+                            $this->extList[] = str_replace('/[^a-zA-Z\s]/', '',$vb);
+                        }
+                    }
+                } else {
+                    //ignore other parms passed
+                    exit('Unidentified parms '.$v.' Passed !');
+                
                 }
-            } else {
-                //ignore other parms passed
-                exit('Unidentified parms '.$v.' Passed !');
-            
             }
-        
         }
-
     }
     
     //input a path ,set all file into $this->fileList
@@ -87,12 +97,30 @@ class UniqFile
             unset($newTmpFileList['.']);
             unset($newTmpFileList['..']);
             foreach ($newTmpFileList as $kb => $vb) {
-                array_push($this->fileList, $path.$kb);
+                if (!is_dir($path.$kb)) {
+                    $this->allFileCount++;
+                    //match file ext
+                    if (count($this->extList)) {
+                        $tmpExplode = explode('.', $kb);
+                        //has no . in file name
+                        if (count($tmpExplode) == 1 ) {
+                            $currentFileExt = 'null';
+                        } else {
+                            $currentFileExt = $tmpExplode[count($tmpExplode) - 1];
+                        }
+
+                        if (in_array($currentFileExt, $this->extList, TRUE )) {
+                            array_push($this->fileList, $path.$kb);
+                        }
+
+                    } else {
+                        array_push($this->fileList, $path.$kb);
+                    }
+                }
             }
             foreach ($tmpFileList as $k => $v) {
                 if ($v != '.' && $v != '..' && is_dir($path.$v)) {
                     $this->scanDirectory($path.$v);
-                    array_push($this->dirList, $path.$v);
                 }
             
             }
@@ -110,10 +138,8 @@ class UniqFile
             exit($this->dirToCheck.'is not a effective directory');
         }
 
-
         $this->scanDirectory($this->dirToCheck);
         $this->fileList = array_values($this->fileList);
-        $this->fileList = array_diff($this->fileList,$this->dirList);
         foreach ($this->fileList as $k => $v) {
             if (@filesize($v) === FALSE) {
                 unset($this->fileList[$k]);
@@ -126,7 +152,7 @@ class UniqFile
                         );
             }
         }
-        $this->allFileCount = count($this->fileList);
+        $this->extFileCount = count($this->fileList);
         foreach ($this->fileList as $k => $v) {
             if ($v['filesize'] == 0) {
                 unset($this->fileList[$k]);
@@ -220,14 +246,18 @@ class UniqFile
         echo "作为判断文件是否相同的标准\n";
         echo "当前检查目录为 ".$this->supportParameters['-dir'].",\n" ;
         echo "共使用了 $this->timeCost 秒\n";
-        echo "共有 $this->deniedFileCount 个文件没有权限读取,空文件共有 $this->emptyFileCount 个\n";
-        echo "共检查了$this->allFileCount 个文件， 重复的有 $this->repeatFileCount 组\n";
+        if (count($this->extList)) {
+            echo "共有".$this->extFileCount.'个符合'.implode(',', $this->extList)."的文件\n";
+        
+        }
+        echo "其中共有 $this->deniedFileCount 个文件没有权限读取,空文件共有 $this->emptyFileCount 个\n";
+        echo "总共检查了$this->allFileCount 个文件， 重复的有 $this->repeatFileCount 组\n";
     
         
     
     }
-
 }
+
 
 $instance = new UniqFile($argv);
 $instance->check();
